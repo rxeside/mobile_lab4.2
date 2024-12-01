@@ -31,9 +31,10 @@ class BuildingsFragment : Fragment(R.layout.fragment_buildings) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val adapter = BuildingsAdapter { building ->
-            gameViewModel.buyBuilding(building)
-        }
+        val adapter = BuildingsAdapter(
+            onBuildingClick = { building -> gameViewModel.buyBuilding(building) },
+            onBuildingSell = { building -> gameViewModel.sellBuilding(building) }
+        )
 
         binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerView.adapter = adapter

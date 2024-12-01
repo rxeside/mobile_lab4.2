@@ -38,7 +38,7 @@ class GameViewModel : ViewModel() {
     }
 
     private fun startCookieProcess() {
-        var elapsedTimeInSeconds = 0 // Время с начала игры в секундах
+        var elapsedTimeInSeconds = 0
 
         viewModelScope.launch {
             while (true) {
@@ -73,17 +73,18 @@ class GameViewModel : ViewModel() {
     private fun initializeBuildings() {
         _state.value = _state.value.copy(
             buildings = listOf(
-                Building("Клик", BuildingType.CLICKER, 0, 15, 0.1, false),
-                Building("Бабуля", BuildingType.GRANDMA, 0, 100, 1.0, false),
-                Building("Ферма", BuildingType.FARM, 0, 1100, 8.0, false),
-                Building("Шахта", BuildingType.MINE, 0, 12000, 47.0, false),
-                Building("Фабрика", BuildingType.FABRIC, 0, 130000, 260.0, false),
-                Building("Банк", BuildingType.BANK, 0, 1400000, 1400.0, false),
-                Building("Храм", BuildingType.TEMPLE, 0, 20000000, 7800.0, false),
-                Building("Башня волшебника", BuildingType.WIZARD_TOWER, 0, 330000000, 44000.0, false)
+                Building(1, "Клик", BuildingType.CLICKER, 0, 15, 0.1, false),
+                Building(2, "Бабуля", BuildingType.GRANDMA, 0, 100, 1.0, false),
+                Building(3, "Ферма", BuildingType.FARM, 0, 1100, 8.0, false),
+                Building(4, "Шахта", BuildingType.MINE, 0, 12000, 47.0, false),
+                Building(5, "Фабрика", BuildingType.FABRIC, 0, 130000, 260.0, false),
+                Building(6, "Банк", BuildingType.BANK, 0, 1400000, 1400.0, false),
+                Building(7, "Храм", BuildingType.TEMPLE, 0, 20000000, 7800.0, false),
+                Building(8, "Башня волшебника", BuildingType.WIZARD_TOWER, 0, 330000000, 44000.0, false)
             )
         )
     }
+
 
     fun buyBuilding(building: Building) {
         if (_state.value.count >= building.cost) {
@@ -146,4 +147,23 @@ class GameViewModel : ViewModel() {
     fun clearToast() {
         _toast.value = null
     }
+
+    fun sellBuilding(building: Building) {
+        println("Sell button clicked for ${building.name}")
+        val updatedBuildings = _state.value.buildings.map {
+            if (it.id == building.id) {
+                it.copy(
+                    count = it.count - 1,
+                    income = it.income - building.income
+                )
+            } else it
+        }
+        val updatedCookies = _state.value.count + building.cost
+        _state.value = _state.value.copy(
+            buildings = updatedBuildings,
+            count = updatedCookies
+        )
+        _toast.value = "Вы продали ${building.name} за ${building.cost} 🍪!"
+    }
+
 }

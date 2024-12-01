@@ -1,6 +1,7 @@
 package com.example.myapplication.ui.buildings
 
 data class Building(
+    val id: Int,
     val name: String,
     val type: BuildingType,
     val count: Int,

@@ -8,7 +8,8 @@ import com.example.myapplication.R
 import com.example.myapplication.databinding.ItemBuildingBinding
 
 class BuildingsAdapter(
-    private val onBuildingClick: (Building) -> Unit
+    private val onBuildingClick: (Building) -> Unit,
+    private val onBuildingSell: (Building) -> Unit
 ) : RecyclerView.Adapter<BuildingsAdapter.BuildingViewHolder>() {
 
     private var buildingsList: List<Building> = emptyList()
@@ -46,6 +47,12 @@ class BuildingsAdapter(
             binding.root.alpha = if (building.isAvailable) 1.0f else 0.5f
             binding.root.isClickable = building.isAvailable
             binding.root.setOnClickListener { onBuildingClick(building) }
+            binding.sellButton.setOnClickListener {
+                if (building.count > 0) {
+                    onBuildingSell(building)
+                }
+            }
+
         }
     }
 
