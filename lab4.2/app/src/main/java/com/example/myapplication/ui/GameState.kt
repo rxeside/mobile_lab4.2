@@ -7,5 +7,5 @@ data class GameState(
     val cookiesPerSecond: Double = 0.0,
     val buildings: List<Building> = emptyList(),
     val averageSpeed: Double = 0.0,
-    val elapsedTime: String = "4:20"
+    val elapsedTime: String = "0:00"
 )

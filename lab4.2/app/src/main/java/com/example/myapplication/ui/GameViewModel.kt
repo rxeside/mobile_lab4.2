@@ -1,5 +1,6 @@
 package com.example.myapplication.ui
 
+import android.annotation.SuppressLint
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.myapplication.ui.buildings.Building
@@ -11,35 +12,61 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.math.floor
+import kotlin.math.log10
+import kotlin.math.pow
 
 class GameViewModel : ViewModel() {
     private val _state = MutableStateFlow(GameState())
     val gameState: StateFlow<GameState> = _state
 
-    private val _toast = MutableSharedFlow<String>()
-    val toast: SharedFlow<String> = _toast
+    private val _toast = MutableStateFlow<String?>(null)
+    val toast: StateFlow<String?> = _toast
+
+    private var lastToastPowerOfTen = 0
 
     init {
         initializeBuildings()
         startCookieProcess()
     }
 
+    @SuppressLint("DefaultLocale")
+    private fun formatElapsedTime(seconds: Int): String {
+        val minutes = seconds / 60
+        val remainingSeconds = seconds % 60
+        return String.format("%d:%02d", minutes, remainingSeconds)
+    }
+
     private fun startCookieProcess() {
+        var elapsedTimeInSeconds = 0 // Время с начала игры в секундах
+
         viewModelScope.launch {
             while (true) {
                 delay(1000)
+                elapsedTimeInSeconds++
 
-                _state.update {
-                    it.copy(count = it.count + it.cookiesPerSecond)
+                _state.update { state ->
+                    val updatedState = state.copy(
+                        count = state.count + state.cookiesPerSecond,
+                        elapsedTime = formatElapsedTime(elapsedTimeInSeconds)
+                    )
+                    checkAndShowToastForPowerOfTen(updatedState.count)
+                    updatedState.copy(
+                        buildings = updateBuildingsAvailability(updatedState)
+                    )
                 }
-
             }
         }
     }
 
+
     fun onCookieClicked() {
-        _state.update {
-            it.copy(count = it.count + 1.0)
+        _state.update { state ->
+            val updatedState = state.copy(count = state.count + 1.0)
+            checkAndShowToastForPowerOfTen(updatedState.count)
+            updatedState.copy(
+                buildings = updateBuildingsAvailability(updatedState)
+            )
         }
     }
 
@@ -62,20 +89,30 @@ class GameViewModel : ViewModel() {
         if (_state.value.count >= building.cost) {
             val updatedBuildings = _state.value.buildings.map {
                 if (it.name == building.name) {
+                    val newIncome = it.income * 1.10 // Увеличиваем доход на 10% за каждое строение
                     it.copy(
                         count = it.count + 1,
-                        cost = (it.cost * 1.15).toInt()
+                        cost = (it.cost * 1.15).toInt(),
+                        income = newIncome
                     )
                 } else it
             }
-            _state.value = _state.value.copy(
-                count = _state.value.count - building.cost,
-                buildings = updatedBuildings,
-                cookiesPerSecond = _state.value.cookiesPerSecond + building.income
-            )
+
+            _state.update { state ->
+                val totalIncome = updatedBuildings.sumOf { it.count * it.income }
+                val updatedState = state.copy(
+                    count = state.count - building.cost,
+                    buildings = updatedBuildings,
+                    cookiesPerSecond = totalIncome
+                )
+                checkAndShowToastForPowerOfTen(updatedState.count)
+                updatedState.copy(
+                    buildings = updateBuildingsAvailability(updatedState)
+                )
+            }
 
             viewModelScope.launch {
-                _toast.emit("Вы купили ${building.name}!")
+                _toast.emit("Вы купили ${building.name}! Теперь оно приносит больше!")
             }
         } else {
             viewModelScope.launch {
@@ -84,11 +121,29 @@ class GameViewModel : ViewModel() {
         }
     }
 
-    fun updateBuildingsAvailability() {
-        val currentCookies = _state.value.count
-        val updatedBuildings = _state.value.buildings.map {
-            it.copy(isAvailable = currentCookies >= it.cost)
+    private fun updateBuildingsAvailability(state: GameState): List<Building> {
+        val currentCookies = state.count
+        return state.buildings.map {
+            it.copy(
+                isAvailable = currentCookies >= it.cost,
+                nextIncome = it.income * 1.10
+            )
         }
-        _state.value = _state.value.copy(buildings = updatedBuildings)
+    }
+
+
+    private fun checkAndShowToastForPowerOfTen(currentCount: Double) {
+        val currentPowerOfTen = floor(log10(currentCount.coerceAtLeast(1.0))).toInt()
+        if (currentPowerOfTen > lastToastPowerOfTen) {
+            lastToastPowerOfTen = currentPowerOfTen
+            val milestone = 10.0.pow(currentPowerOfTen).toInt()
+            viewModelScope.launch {
+                _toast.value = "Поздравляем! Вы достигли $milestone печенек!"
+            }
+        }
+    }
+
+    fun clearToast() {
+        _toast.value = null
     }
 }

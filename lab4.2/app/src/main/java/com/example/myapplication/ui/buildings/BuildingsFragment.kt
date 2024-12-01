@@ -41,13 +41,14 @@ class BuildingsFragment : Fragment(R.layout.fragment_buildings) {
         gameViewModel.gameState
             .onEach { gameState ->
                 adapter.submitList(gameState.buildings)
-                gameViewModel.updateBuildingsAvailability()
             }
             .launchIn(viewLifecycleOwner.lifecycleScope)
 
         gameViewModel.toast
             .onEach { message ->
-                Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+                message?.let {
+                    Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
+                }
             }
             .launchIn(viewLifecycleOwner.lifecycleScope)
     }

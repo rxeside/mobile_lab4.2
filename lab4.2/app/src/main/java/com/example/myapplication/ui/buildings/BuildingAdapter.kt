@@ -36,12 +36,13 @@ class BuildingsAdapter(
     inner class BuildingViewHolder(private val binding: ItemBuildingBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
-        @SuppressLint("SetTextI18n")
+        @SuppressLint("SetTextI18n", "DefaultLocale")
         fun bind(building: Building) {
             binding.name.text = building.name
             binding.count.text = building.count.toString()
             binding.cost.text = "${building.cost} 🍪"
             binding.icon.setImageResource(getIconForBuildingType(building.type))
+            binding.nextIncome.text = "+${String.format("%.1f", building.nextIncome - building.income)}/сек" // Прирост скорости
             binding.root.alpha = if (building.isAvailable) 1.0f else 0.5f
             binding.root.isClickable = building.isAvailable
             binding.root.setOnClickListener { onBuildingClick(building) }

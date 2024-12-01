@@ -2,6 +2,7 @@ package com.example.myapplication.ui.clicker
 
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
@@ -16,7 +17,6 @@ class ClickerFragment : Fragment(R.layout.fragment_clicker) {
     private val gameViewModel: GameViewModel by activityViewModels()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-
         super.onViewCreated(view, savedInstanceState)
         binding = FragmentClickerBinding.bind(view)
 
@@ -27,10 +27,19 @@ class ClickerFragment : Fragment(R.layout.fragment_clicker) {
 
         gameViewModel.gameState
             .onEach { state ->
-                    binding.count.text = getString(R.string.cookie_count, state.count)
-                    binding.perSecond.text = getString(R.string.per_second, state.cookiesPerSecond)
-                    binding.time.text = getString(R.string.time, state.elapsedTime)
-                    binding.averageSpeed.text = getString(R.string.average_speed, state.cookiesPerSecond * 60.0)
+                binding.count.text = getString(R.string.cookie_count, state.count)
+                binding.perSecond.text = getString(R.string.per_second, state.cookiesPerSecond)
+                binding.time.text = getString(R.string.time, state.elapsedTime)
+                binding.averageSpeed.text = getString(R.string.average_speed, state.cookiesPerSecond * 60.0)
+            }
+            .launchIn(viewLifecycleOwner.lifecycleScope)
+
+        gameViewModel.toast
+            .onEach { message ->
+                if (message != null) {
+                    Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+                    gameViewModel.clearToast()
+                }
             }
             .launchIn(viewLifecycleOwner.lifecycleScope)
     }
@@ -44,4 +53,3 @@ class ClickerFragment : Fragment(R.layout.fragment_clicker) {
             }
     }
 }
-

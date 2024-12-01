@@ -7,6 +7,7 @@ data class Building(
     val cost: Int,
     val income: Double,
     val isAvailable: Boolean,
+    val nextIncome: Double = income * 1.10
 )
 
 enum class BuildingType {
